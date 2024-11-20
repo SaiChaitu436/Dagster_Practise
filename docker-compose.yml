@@ -1,0 +1,144 @@
+# version: "3.8"
+# services:
+#   dagster:
+#     build:
+#       context: .
+#     ports:
+#       - "3000:3000"  # Dagit web interface
+#     volumes:
+#       - ./dagster_project:/dagster_project
+#       - ./storage/dagster_instance:/opt/dagster/storage
+#     environment:
+#       DAGSTER_HOME: /opt/dagster/storage
+#     depends_on:
+#       - postgres
+
+#   postgres:
+#     image: postgres:14
+#     environment:
+#       POSTGRES_USER: dagster
+#       POSTGRES_PASSWORD: dagster
+#       POSTGRES_DB: dagster
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:
+
+
+# docker_example_user_code:
+#     build:
+#       context: .
+#       dockerfile: ./Dockerfile_user_code
+#     container_name: docker_example_user_code
+#     image: docker_example_user_code_image
+#     restart: always
+#     environment:
+#       DAGSTER_POSTGRES_USER: "postgres_user"
+#       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+#       DAGSTER_POSTGRES_DB: "postgres_db"
+#       DAGSTER_CURRENT_IMAGE: "docker_example_user_code_image"
+#     networks:
+#       - docker_example_network
+
+#   # This service runs dagster-webserver, which loads your user code from the user code container.
+#   # Since our instance uses the QueuedRunCoordinator, any runs submitted from the webserver will be put on
+#   # a queue and later dequeued and launched by dagster-daemon.
+#   docker_example_webserver:
+#     build:
+#       context: .
+#       dockerfile: ./Dockerfile_dagster
+#     entrypoint:
+#       - dagster-webserver
+#       - -h
+#       - "0.0.0.0"
+#       - -p
+#       - "3000"
+#       - -w
+#       - workspace.yaml
+#     container_name: docker_example_webserver
+#     expose:
+#       - "3000"
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       DAGSTER_POSTGRES_USER: "postgres_user"
+#       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+#       DAGSTER_POSTGRES_DB: "postgres_db"
+#     volumes: # Make docker client accessible so we can terminate containers from the webserver
+#       - /var/run/docker.sock:/var/run/docker.sock
+#       - /tmp/io_manager_storage:/tmp/io_manager_storage
+#     networks:
+#       - docker_example_network
+#     depends_on:
+#       docker_example_postgresql:
+#         condition: service_healthy
+#       docker_example_user_code:
+#         condition: service_started
+
+#   # This service runs the dagster-daemon process, which is responsible for taking runs
+#   # off of the queue and launching them, as well as creating runs from schedules or sensors.
+#   docker_example_daemon:
+#     build:
+#       context: .
+#       dockerfile: ./Dockerfile_dagster
+#     entrypoint:
+#       - dagster-daemon
+#       - run
+#     container_name: docker_example_daemon
+#     restart: on-failure
+#     environment:
+#       DAGSTER_POSTGRES_USER: "postgres_user"
+#       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+#       DAGSTER_POSTGRES_DB: "postgres_db"
+#     volumes: # Make docker client accessible so we can launch containers using host docker
+#       - /var/run/docker.sock:/var/run/docker.sock
+#       - /tmp/io_manager_storage:/tmp/io_manager_storage
+#     networks:
+#       - docker_example_network
+#     depends_on:
+#       docker_example_postgresql:
+#         condition: service_healthy
+#       docker_example_user_code:
+#         condition: service_started
+
+# networks:
+#   docker_example_network:
+#     driver: bridge
+#     name: docker_example_network
+
+
+
+services:
+
+  dagster-dagit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+
+  dagster-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "dagster-daemon run"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=securepassword
+
+  dagster-postgres:
+    image: postgres:13.3
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dagster
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: dagster
+    volumes:
+      - dagster-postgres:/var/lib/postgresql/data
+    
+volumes:
+  dagster-postgres:
+    driver: local
+    

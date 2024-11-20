@@ -1,0 +1,13 @@
+# load_from:
+#   - python_file:
+#       relative_path: dagster_project/repository.py
+#       location_name: dagster_project
+
+
+# load_from:
+#   - python_file: repo.py
+
+
+load_from:
+  - python_package:
+      package_name: my_dgaster_project
