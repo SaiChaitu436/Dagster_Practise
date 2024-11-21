@@ -1,69 +1,26 @@
-# # instance_class: dagster.core.instance.DagsterInstance
-# # local_artifact_storage:
-# #   base_dir: /opt/dagster/storage
-# # compute_logs:
-# #   module: dagster.core.storage.compute_log_manager
-# #   class: LocalComputeLogManager
-# #   config:
-# #     base_dir: /opt/dagster/storage/compute_logs
-# # run_storage:
-# #   module: dagster_postgres.run_storage
-# #   class: PostgresRunStorage
-# #   config:
-# #     postgres_url: postgresql://dagster:dagster@postgres/dagster
-# # event_log_storage:
-# #   module: dagster_postgres.event_log
-# #   class: PostgresEventLogStorage
-# #   config:
-# #     postgres_url: postgresql://dagster:dagster@postgres/dagster
-# # schedule_storage:
-# #   module: dagster_postgres.schedule_storage
-# #   class: PostgresScheduleStorage
-# #   config:
-# #     postgres_url: postgresql://dagster:dagster@postgres/dagster
+scheduler:
+  module: dagster.core.scheduler
+  class: DagsterDaemonScheduler
 
-# # run_launcher:
-# #   module: dagster_docker
-# #   class: DockerRunLauncher
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: QueuedRunCoordinator
 
-# storage:
-#   postgres:
-#     postgres_db:
-#       username:
-#         env: DAGSTER_PG_USERNAME
-#       password:
-#         env: DAGSTER_PG_PASSWORD
-#       hostname:
-#         env: DAGSTER_PG_HOST
-#       db_name:
-#         env: DAGSTER_PG_DB
-#       port: 5432
-
-# compute_logs:
-#   module: dagster_aws.s3.compute_log_manager
-#   class: S3ComputeLogManager
-#   config:
-#     bucket: "mycorp-dagster-compute-logs"
-#     prefix: "dagster-test-"
-
-# local_artifact_storage:
-#   module: dagster.core.storage.root
-#   class: LocalArtifactStorage
-#   config:
-#     base_dir: "/opt/dagster/local/"
-
-# run_launcher:
-#   module: dagster_docker
-#   class: DockerRunLauncher
-#   config:
-#     env_vars:
-#       - DAGSTER_POSTGRES_USER
-#       - DAGSTER_POSTGRES_PASSWORD
-#       - DAGSTER_POSTGRES_DB
-#     container_kwargs:
-#       volumes:
-#         - /absolute/path/to/local/repo.py:/opt/dagster/app/
-
+run_launcher:
+  module: dagster_docker
+  class: DockerRunLauncher
+  config:
+    env_vars:
+      - DAGSTER_POSTGRES_USER
+      - DAGSTER_POSTGRES_PASSWORD
+      - DAGSTER_POSTGRES_DB
+    network: docker_example_network
+    container_kwargs:
+      volumes: # Make docker client accessible to any launched containers as well
+        - /var/run/docker.sock:/var/run/docker.sock
+        - C:/Users/SAILS-DM204/OneDrive - Sails Software Solutions Pvt Ltd/Desktop/New folder/my_dagster_project/dbt/buy_box_gcp_1/profiles.yml:/root/.dbt/buy_box_gcp_1/profiles.yml
+        - C:/Users/SAILS-DM204/OneDrive - Sails Software Solutions Pvt Ltd/Desktop/New folder/my_dagster_project/dbt/buy_box_gcp_1:/mnt/dbt/buy_box_gcp_1
+        
 
 
 run_storage:
@@ -71,21 +28,13 @@ run_storage:
   class: PostgresRunStorage
   config:
     postgres_db:
-      username: postgres
-      password: demopass
-      hostname: dagster-postgres
-      db_name: postgres
-      port: 5432
-
-event_log_storage:
-  module: dagster_postgres.event_log
-  class: PostgresEventLogStorage
-  config:
-    postgres_db:
-      username: postgres
-      password: demopass
-      hostname: dagster-postgres
-      db_name: postgres
+      hostname: docker_example_postgresql
+      username:
+        env: DAGSTER_POSTGRES_USER
+      password:
+        env: DAGSTER_POSTGRES_PASSWORD
+      db_name:
+        env: DAGSTER_POSTGRES_DB
       port: 5432
 
 schedule_storage:
@@ -93,19 +42,25 @@ schedule_storage:
   class: PostgresScheduleStorage
   config:
     postgres_db:
-      username: postgres
-      password: demopass
-      hostname: dagster-postgres
-      db_name: postgres
+      hostname: docker_example_postgresql
+      username:
+        env: DAGSTER_POSTGRES_USER
+      password:
+        env: DAGSTER_POSTGRES_PASSWORD
+      db_name:
+        env: DAGSTER_POSTGRES_DB
       port: 5432
 
-run_coordinator:
-  module: dagster.core.run_coordinator
-  class: QueuedRunCoordinator
+event_log_storage:
+  module: dagster_postgres.event_log
+  class: PostgresEventLogStorage
   config:
-    max_concurrent_runs: 5
-    
-telemetry:
-  enabled: false
-nux:
-  enabled: false
+    postgres_db:
+      hostname: docker_example_postgresql
+      username:
+        env: DAGSTER_POSTGRES_USER
+      password:
+        env: DAGSTER_POSTGRES_PASSWORD
+      db_name:
+        env: DAGSTER_POSTGRES_DB
+      port: 5432

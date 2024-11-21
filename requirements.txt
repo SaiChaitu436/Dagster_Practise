@@ -1,5 +1,4 @@
 dagster
-dagit
-dagster-dbt
-dagster-postgres
-psycopg2-binary
+dagster-webserver
+dagster-docker
+dbt-bigquery==1.8.3
